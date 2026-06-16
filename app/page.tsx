@@ -8,7 +8,7 @@ export default function Home() {
   const [selectedDistrict, setSelectedDistrict] = useState<string>('')
   const [members, setMembers] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
-
+  const [nameQuery, setNameQuery] = useState('')
   const handleRegion = (region: string) => {
     setSelectedRegion(region)
     setSelectedDistrict('')
@@ -27,7 +27,15 @@ export default function Home() {
 
     setLoading(false)
   }
-
+  const handleNameSearch = async () => {
+    if (!nameQuery.trim()) return
+    setLoading(true)
+    const res = await fetch(`/api/members?name=${encodeURIComponent(nameQuery)}`)
+    const data = await res.json()
+    const row = data.nwvrqwxyaytdsfvhu?.[1]?.row ?? []
+    setMembers(row)
+    setLoading(false)
+  }
   return (
     <main className="min-h-screen bg-gray-50">
       {/* 헤더 */}
@@ -35,7 +43,22 @@ export default function Home() {
         <h1 className="text-xl font-bold">내 지역구 국회의원</h1>
         <p className="text-blue-200 text-sm mt-1">지역을 선택하세요</p>
       </div>
-
+      <div className="flex gap-2 mb-4 px-4 py-4">
+        <input
+          type="text"
+          placeholder="의원 이름 검색"
+          value={nameQuery}
+          onChange={(e) => setNameQuery(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleNameSearch()}
+          className="flex-1 p-3 border border-gray-200 rounded-lg text-sm bg-white"
+        />
+        <button
+          onClick={handleNameSearch}
+          className="px-4 py-3 bg-blue-600 text-white rounded-lg text-sm font-medium"
+        >
+          검색
+        </button>
+      </div>
       <div className="px-4 py-4">
         {/* 시/도 선택 */}
         <div className="grid grid-cols-4 gap-2 mb-4">
