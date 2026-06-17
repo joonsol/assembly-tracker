@@ -40,8 +40,8 @@ export default function Home() {
     <main className="min-h-screen bg-gray-50">
       {/* 헤더 */}
       <div className="bg-blue-600 text-white px-4 py-5">
-        <h1 className="text-xl font-bold">내 지역구 국회의원</h1>
-        <p className="text-blue-200 text-sm mt-1">지역을 선택하세요</p>
+        <img src="/logo.svg" alt="한눈에 국회의원" className="h-10 mb-1 brightness-0 invert" />
+        <p className="text-blue-200 text-sm mt-1">우리 지역 국회의원을 빠르게 찾아보세요</p>
       </div>
       <div className="flex gap-2 mb-4 px-4 py-4">
         <input
