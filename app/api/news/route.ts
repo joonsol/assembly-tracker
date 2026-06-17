@@ -14,9 +14,11 @@ export async function GET(req: NextRequest) {
             'X-Naver-Client-Id': CLIENT_ID!,
             'X-Naver-Client-Secret': CLIENT_SECRET!,
         },
-        cache: 'no-store',
+        next: { revalidate: 600 },
     })
 
     const data = await res.json()
-    return NextResponse.json(data)
+    return NextResponse.json(data, {
+        headers: { 'Cache-Control': 's-maxage=600, stale-while-revalidate=3600' }
+    })
 }

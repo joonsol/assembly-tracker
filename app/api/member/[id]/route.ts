@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+export const revalidate = 3600
+
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -9,9 +11,11 @@ export async function GET(
 
   const url = `https://open.assembly.go.kr/portal/openapi/nwvrqwxyaytdsfvhu?KEY=${API_KEY}&Type=json&pIndex=1&pSize=1&MONA_CD=${id}`
 
-  const res = await fetch(url)
+  const res = await fetch(url, { next: { revalidate: 3600 } })
   const data = await res.json()
   const member = data.nwvrqwxyaytdsfvhu?.[1]?.row?.[0] ?? null
 
-  return NextResponse.json(member)
+  return NextResponse.json(member, {
+    headers: { 'Cache-Control': 's-maxage=3600, stale-while-revalidate=86400' }
+  })
 }
