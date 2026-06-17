@@ -22,8 +22,7 @@ export default function Home() {
     const query = `${selectedRegion} ${district}`
     const res = await fetch(`/api/members?region=${encodeURIComponent(query)}`)
     const data = await res.json()
-    const row = data.nwvrqwxyaytdsfvhu?.[1]?.row ?? []
-    setMembers(row)
+    setMembers(Array.isArray(data) ? data : [])
 
     setLoading(false)
   }
@@ -32,8 +31,7 @@ export default function Home() {
     setLoading(true)
     const res = await fetch(`/api/members?name=${encodeURIComponent(nameQuery)}`)
     const data = await res.json()
-    const row = data.nwvrqwxyaytdsfvhu?.[1]?.row ?? []
-    setMembers(row)
+    setMembers(Array.isArray(data) ? data : [])
     setLoading(false)
   }
   return (
@@ -100,14 +98,14 @@ export default function Home() {
         {/* 의원 목록 */}
         <div className="space-y-2">
           {members.map((m: any) => (
-            <Link href={`/member/${m.MONA_CD}`} key={m.MONA_CD}>
+            <Link href={`/member/${m.mona_cd}`} key={m.mona_cd}>
               <div className="bg-white p-4 rounded-xl border border-gray-100 active:bg-gray-50">
                 <div className="flex justify-between items-center">
                   <div>
-                    <span className="font-bold text-gray-900">{m.HG_NM}</span>
-                    <span className="ml-2 text-xs text-gray-400">{m.POLY_NM}</span>
+                    <span className="font-bold text-gray-900">{m.hg_nm}</span>
+                    <span className="ml-2 text-xs text-gray-400">{m.poly_nm}</span>
                   </div>
-                  <span className="text-xs text-gray-400">{m.ORIG_NM} →</span>
+                  <span className="text-xs text-gray-400">{m.orig_nm} →</span>
                 </div>
               </div>
             </Link>

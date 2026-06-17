@@ -1,22 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { supabase } from '@/lib/supabase'
 
 export const revalidate = 3600
 
 export async function GET(req: NextRequest) {
-    const API_KEY = process.env.ASSEMBLY_API_KEY
     const region = req.nextUrl.searchParams.get('region') ?? ''
     const name = req.nextUrl.searchParams.get('name') ?? ''
 
-    const url = `https://open.assembly.go.kr/portal/openapi/nwvrqwxyaytdsfvhu?KEY=${API_KEY}&Type=json&pIndex=1&pSize=300&ORIG_NM=${encodeURIComponent(region)}&HG_NM=${encodeURIComponent(name)}`
+    let query = supabase.from('member_stats').select('*')
 
-    const res = await fetch(url, { next: { revalidate: 3600 } })
-    const text = await res.text()
-
-    if (!text || text.trim() === '') {
-        return NextResponse.json({ nwvrqwxyaytdsfvhu: [{}, { row: [] }] })
+    if (region) {
+        query = query.ilike('orig_nm', `%${region}%`)
+    }
+    if (name) {
+        query = query.ilike('hg_nm', `%${name}%`)
     }
 
-    const data = JSON.parse(text)
+    const { data, error } = await query
+
+    if (error) {
+        return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
     return NextResponse.json(data, {
         headers: { 'Cache-Control': 's-maxage=3600, stale-while-revalidate=86400' }
     })
