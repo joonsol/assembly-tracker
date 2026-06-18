@@ -43,8 +43,8 @@ export async function GET(request: NextRequest) {
 
   const email = naverUser.email ?? `${naverUser.id}@naver.provider`
 
-  // Supabase 사용자 생성 또는 조회
-  const { error: createError } = await supabaseAdmin.auth.admin.createUser({
+  // Supabase 사용자 생성 또는 조회 (이미 존재해도 무시)
+  await supabaseAdmin.auth.admin.createUser({
     email,
     email_confirm: true,
     user_metadata: {
@@ -54,10 +54,6 @@ export async function GET(request: NextRequest) {
       avatar_url: naverUser.profile_image ?? '',
     },
   })
-
-  if (createError && !createError.message.includes('already been registered')) {
-    return NextResponse.redirect(`${origin}/login?error=user_creation_failed`)
-  }
 
   // 매직링크로 세션 생성
   const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
