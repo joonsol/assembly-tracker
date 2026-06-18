@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
   const email = naverUser.email ?? `${naverUser.id}@naver.provider`
 
   // Supabase 사용자 생성 또는 조회 (이미 존재해도 무시)
-  await supabaseAdmin.auth.admin.createUser({
+  const { error: createError } = await supabaseAdmin.auth.admin.createUser({
     email,
     email_confirm: true,
     user_metadata: {
@@ -62,7 +62,8 @@ export async function GET(request: NextRequest) {
   })
 
   if (linkError || !linkData?.properties?.action_link) {
-    return NextResponse.redirect(`${origin}/login?error=session_failed`)
+    const msg = encodeURIComponent(linkError?.message ?? createError?.message ?? 'unknown')
+    return NextResponse.redirect(`${origin}/login?error=session_failed&msg=${msg}`)
   }
 
   const response = NextResponse.redirect(linkData.properties.action_link)
