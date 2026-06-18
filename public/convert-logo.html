@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<body>
+<canvas id="c" width="200" height="48"></canvas>
+<script>
+const svg = `<svg width="200" height="48" viewBox="0 0 200 48" xmlns="http://www.w3.org/2000/svg">
+  <rect width="200" height="48" fill="white"/>
+  <g transform="translate(4, 4)">
+    <ellipse cx="20" cy="22" rx="14" ry="8" fill="#2563eb" opacity="0.15"/>
+    <path d="M6 22 Q20 6 34 22" fill="#2563eb"/>
+    <rect x="8" y="22" width="3" height="10" fill="#1d4ed8"/>
+    <rect x="14" y="22" width="3" height="10" fill="#1d4ed8"/>
+    <rect x="20" y="22" width="3" height="10" fill="#1d4ed8"/>
+    <rect x="26" y="22" width="3" height="10" fill="#1d4ed8"/>
+    <rect x="32" y="22" width="3" height="10" fill="#1d4ed8"/>
+    <rect x="5" y="32" width="30" height="3" rx="1" fill="#1e40af"/>
+    <line x1="21.5" y1="6" x2="21.5" y2="2" stroke="#2563eb" stroke-width="2" stroke-linecap="round"/>
+  </g>
+  <text x="48" y="20" font-family="sans-serif" font-size="13" font-weight="700" fill="#1e40af">한눈에</text>
+  <text x="48" y="38" font-family="sans-serif" font-size="15" font-weight="800" fill="#2563eb">국회의원</text>
+</svg>`
+
+const blob = new Blob([svg], {type: 'image/svg+xml'})
+const url = URL.createObjectURL(blob)
+const img = new Image()
+img.onload = () => {
+  const canvas = document.getElementById('c')
+  const ctx = canvas.getContext('2d')
+  ctx.drawImage(img, 0, 0)
+  const a = document.createElement('a')
+  a.download = 'logo.jpg'
+  a.href = canvas.toDataURL('image/jpeg', 1.0)
+  a.click()
+}
+img.src = url
+</script>
+</body>
+</html>

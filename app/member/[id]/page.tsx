@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
+import BookmarkButton from './BookmarkButton'
 
 interface Props {
     params: Promise<{ id: string }>
@@ -106,9 +107,12 @@ export default async function MemberPage({ params }: Props) {
         <main className="min-h-screen bg-gray-50">
             {/* 헤더 */}
             <div className="bg-blue-600 text-white px-4 py-5">
-                <Link href="/" className="text-blue-200 text-sm mb-3 inline-block">
-                    ← 목록으로
-                </Link>
+                <div className="flex items-center justify-between mb-3">
+                    <Link href="/" className="text-blue-200 text-sm">
+                        ← 목록으로
+                    </Link>
+                    <BookmarkButton monacd={id} />
+                </div>
                 <div className="flex items-center gap-4">
                     {imageUrl && (
                         <img

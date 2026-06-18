@@ -1,14 +1,31 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { REGIONS } from '@/lib/regions'
 import Link from 'next/link'
+import { supabase } from '@/lib/supabase'
+import type { User } from '@supabase/supabase-js'
+
 export default function Home() {
+  const [user, setUser] = useState<User | null>(null)
   const [selectedRegion, setSelectedRegion] = useState<string>('')
   const [selectedDistrict, setSelectedDistrict] = useState<string>('')
   const [members, setMembers] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [nameQuery, setNameQuery] = useState('')
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setUser(data.user))
+    const { data: listener } = supabase.auth.onAuthStateChange((_e, session) => {
+      setUser(session?.user ?? null)
+    })
+    return () => listener.subscription.unsubscribe()
+  }, [])
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+  }
+
   const handleRegion = (region: string) => {
     setSelectedRegion(region)
     setSelectedDistrict('')
@@ -38,7 +55,32 @@ export default function Home() {
     <main className="min-h-screen bg-gray-50">
       {/* 헤더 */}
       <div className="bg-blue-600 text-white px-4 py-5">
-        <img src="/logo.svg" alt="한눈에 국회의원" className="h-10 mb-1 brightness-0 invert" />
+        <div className="flex items-center justify-between">
+          <img src="/logo.svg" alt="한눈에 국회의원" className="h-10 mb-1" />
+          {user ? (
+            <div className="flex items-center gap-2">
+              <Link
+                href="/bookmarks"
+                className="text-xs text-blue-200 border border-blue-400 px-3 py-1.5 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                ★ 즐겨찾기
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="text-xs text-blue-200 border border-blue-400 px-3 py-1.5 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                로그아웃
+              </button>
+            </div>
+          ) : (
+            <Link
+              href="/login"
+              className="text-xs text-blue-200 border border-blue-400 px-3 py-1.5 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              로그인
+            </Link>
+          )}
+        </div>
         <p className="text-blue-200 text-sm mt-1">우리 지역 국회의원을 빠르게 찾아보세요</p>
       </div>
       <div className="flex gap-2 mb-4 px-4 py-4">
