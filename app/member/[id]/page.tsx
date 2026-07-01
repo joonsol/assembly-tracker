@@ -2,6 +2,9 @@ import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import BookmarkButton from './BookmarkButton'
 import MiniMapWrapper from './MiniMapWrapper'
+import ReviewSection from './ReviewSection'
+import RatingBadge from './RatingBadge'
+import AnchorTabs from './AnchorTabs'
 
 interface Props {
     params: Promise<{ id: string }>
@@ -165,42 +168,49 @@ export default async function MemberPage({ params }: Props) {
 
     return (
         <main className="min-h-screen bg-gray-50">
-            {/* 헤더 */}
-            <div className="bg-blue-600 text-white px-4 py-5">
-                <div className="flex items-center justify-between mb-3">
-                    <Link href="/" className="text-blue-200 text-sm">
-                        ← 목록으로
-                    </Link>
-                    <div className="flex items-center gap-2">
-                        <Link
-                            href={`/compare?a=${id}`}
-                            className="text-xs text-blue-200 border border-blue-400 px-3 py-1.5 rounded-lg"
-                        >
-                            ⚖ 비교하기
+            {/* 헤더 + 탭바 — sticky로 묶어서 항상 상단 고정 */}
+            <div className="sticky top-0 z-40 shadow-sm">
+                {/* 헤더 */}
+                <div className="bg-blue-600 text-white px-4 pt-4 pb-3">
+                    <div className="flex items-center justify-between mb-2">
+                        <Link href="/" className="text-blue-200 text-sm">
+                            ← 목록으로
                         </Link>
-                        <BookmarkButton monacd={id} />
+                        <div className="flex items-center gap-2">
+                            <Link
+                                href={`/compare?a=${id}`}
+                                className="text-xs text-blue-200 border border-blue-400 px-3 py-1.5 rounded-lg"
+                            >
+                                ⚖ 비교하기
+                            </Link>
+                            <BookmarkButton monacd={id} />
+                        </div>
                     </div>
-                </div>
-                <div className="flex items-center gap-4">
-                    {imageUrl && (
-                        <img
-                            src={imageUrl}
-                            alt={member.hg_nm}
-                            className="w-20 h-24 object-cover rounded-lg"
-                        />
-                    )}
-                    <div>
-                        <h1 className="text-2xl font-bold">{member.hg_nm}</h1>
-                        <p className="text-blue-200 text-sm mt-1">{member.poly_nm} · {member.orig_nm}</p>
-                        {committees.length > 0 && (
-                            <p className="text-blue-300 text-xs mt-1 line-clamp-2">{committees[0]}</p>
+                    <div className="flex items-center gap-3">
+                        {imageUrl && (
+                            <img
+                                src={imageUrl}
+                                alt={member.hg_nm}
+                                className="w-12 h-14 object-cover rounded-lg flex-shrink-0"
+                            />
                         )}
+                        <div className="flex-1 min-w-0">
+                            <h1 className="text-xl font-bold leading-tight">{member.hg_nm}</h1>
+                            <p className="text-blue-200 text-xs mt-0.5 truncate">{member.poly_nm} · {member.orig_nm}</p>
+                        </div>
                     </div>
                 </div>
+
+                {/* 앵커 탭바 */}
+                <AnchorTabs />
             </div>
 
             <div className="px-4 py-4 space-y-4">
-                {/* 프로필 */}
+                {/* 시민 평가 요약 */}
+                <RatingBadge monacd={id} />
+
+                {/* 기본정보 */}
+                <div id="section-info" className="scroll-mt-14" />
                 {detail && (
                     <div className="bg-white rounded-xl border border-gray-100 divide-y divide-gray-100">
                         {detail.BTH_DATE && (
@@ -280,16 +290,16 @@ export default async function MemberPage({ params }: Props) {
 
                 {/* 지역구 미니 지도 */}
                 {member.orig_nm && (
-                    <div>
+                    <div id="section-district" className="scroll-mt-14">
                         <h2 className="text-sm font-semibold text-gray-500 mb-2 px-1">지역구 위치</h2>
-                        <div className="bg-white rounded-xl border border-gray-100 p-3">
+                        <div className="bg-white rounded-xl border border-gray-100 p-3" style={{ isolation: 'isolate' }}>
                             <MiniMapWrapper origNm={member.orig_nm} />
                         </div>
                     </div>
                 )}
 
                 {/* 의정활동 요약 */}
-                <div>
+                <div id="section-activity" className="scroll-mt-14">
                     <h2 className="text-sm font-semibold text-gray-500 mb-2 px-1">의정활동</h2>
                     <div className="grid grid-cols-2 gap-2">
                         <div className="bg-white rounded-xl border border-gray-100 p-4 text-center">
@@ -461,6 +471,12 @@ export default async function MemberPage({ params }: Props) {
                             ))
                         )}
                     </div>
+                </div>
+
+                {/* 시민 평가 */}
+                <div id="section-review" className="scroll-mt-14">
+                    <h2 className="text-sm font-semibold text-gray-500 mb-2 px-1">시민 평가</h2>
+                    <ReviewSection monacd={id} />
                 </div>
 
                 <div className="pb-6" />

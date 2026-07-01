@@ -115,7 +115,6 @@ export default function Home() {
                   {(user.user_metadata?.full_name ?? user.email ?? '?').charAt(0)}
                 </div>
               )}
-              <span className="text-xs text-blue-100">마이페이지</span>
             </Link>
           ) : (
             <Link href="/login" className="text-xs text-blue-200 border border-blue-400 px-3 py-1.5 rounded-lg">로그인</Link>
