@@ -6,10 +6,13 @@ export const revalidate = 3600
 export async function GET(req: NextRequest) {
     const region = req.nextUrl.searchParams.get('region') ?? ''
     const name = req.nextUrl.searchParams.get('name') ?? ''
+    const id = req.nextUrl.searchParams.get('id') ?? ''
 
     let query = supabase.from('member_stats').select('*')
 
-    if (region) {
+    if (id) {
+        query = query.eq('mona_cd', id)
+    } else if (region) {
         query = query.ilike('orig_nm', `%${region}%`)
     }
     if (name) {

@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import BookmarkButton from './BookmarkButton'
+import MiniMapWrapper from './MiniMapWrapper'
 
 interface Props {
     params: Promise<{ id: string }>
@@ -80,6 +81,34 @@ async function getImage(name: string): Promise<string | null> {
     return data.items?.[0]?.link ?? null
 }
 
+// 갑을병정 제거 후 기본 지역구명 추출
+function baseDistrict(origNm: string) {
+    return origNm.replace(/\s*[갑을병정무기]$/, '').trim()
+}
+
+async function getSameDistrict(id: string, origNm: string) {
+    if (!origNm) return []
+    const base = baseDistrict(origNm)
+    const { data } = await supabase
+        .from('member_stats')
+        .select('mona_cd, hg_nm, poly_nm, orig_nm')
+        .ilike('orig_nm', `${base}%`)
+        .neq('mona_cd', id)
+        .limit(5)
+    return data ?? []
+}
+
+async function getSameParty(id: string, polyNm: string) {
+    if (!polyNm) return []
+    const { data } = await supabase
+        .from('member_stats')
+        .select('mona_cd, hg_nm, poly_nm, orig_nm')
+        .eq('poly_nm', polyNm)
+        .neq('mona_cd', id)
+        .limit(6)
+    return data ?? []
+}
+
 function stripHtml(html: string) {
     return html.replace(/<[^>]*>/g, '')
 }
@@ -89,19 +118,50 @@ function formatDate(pubDate: string) {
     return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`
 }
 
+const PARTY_COLORS: Record<string, string> = {
+    '더불어민주당': 'bg-blue-100 text-blue-700',
+    '국민의힘': 'bg-red-100 text-red-700',
+    '조국혁신당': 'bg-purple-100 text-purple-700',
+    '개혁신당': 'bg-orange-100 text-orange-700',
+    '진보당': 'bg-rose-100 text-rose-700',
+    '기본소득당': 'bg-teal-100 text-teal-700',
+    '사회민주당': 'bg-pink-100 text-pink-700',
+}
+
+function partyBadge(polyNm: string) {
+    return PARTY_COLORS[polyNm] ?? 'bg-gray-100 text-gray-600'
+}
+
 export default async function MemberPage({ params }: Props) {
     const { id } = await params
     const member = await getMember(id)
     if (!member) return <p>의원 정보를 찾을 수 없습니다.</p>
 
-    const [newsItems, bills, imageUrl, detail] = await Promise.all([
+    const [newsItems, bills, imageUrl, detail, sameDistrict, sameParty] = await Promise.all([
         getNews(member.hg_nm),
         getBills(id),
         getImage(member.hg_nm),
         getMemberDetail(id),
+        getSameDistrict(id, member.orig_nm),
+        getSameParty(id, member.poly_nm),
     ])
 
     const totalVotes = (member.vote_yes ?? 0) + (member.vote_no ?? 0) + (member.vote_abstain ?? 0) + (member.vote_absent ?? 0)
+
+    // SNS 링크
+    const snsLinks = detail ? [
+        detail.TWIT && { label: 'X (트위터)', icon: '𝕏', url: detail.TWIT.startsWith('http') ? detail.TWIT : `https://twitter.com/${detail.TWIT}`, color: 'text-gray-800' },
+        detail.FACEBOOK && { label: '페이스북', icon: 'f', url: detail.FACEBOOK.startsWith('http') ? detail.FACEBOOK : `https://facebook.com/${detail.FACEBOOK}`, color: 'text-blue-600' },
+        detail.YOUTUBE && { label: '유튜브', icon: '▶', url: detail.YOUTUBE.startsWith('http') ? detail.YOUTUBE : `https://youtube.com/${detail.YOUTUBE}`, color: 'text-red-600' },
+        detail.BLOG && { label: '블로그', icon: 'B', url: detail.BLOG.startsWith('http') ? detail.BLOG : `https://${detail.BLOG}`, color: 'text-green-600' },
+    ].filter(Boolean) : []
+
+    // 위원회 목록
+    const committees: string[] = detail?.CMITS
+        ? detail.CMITS.split(/[,;·|]/).map((s: string) => s.trim()).filter(Boolean)
+        : detail?.CMIT_NM
+        ? [detail.CMIT_NM]
+        : []
 
     return (
         <main className="min-h-screen bg-gray-50">
@@ -111,7 +171,15 @@ export default async function MemberPage({ params }: Props) {
                     <Link href="/" className="text-blue-200 text-sm">
                         ← 목록으로
                     </Link>
-                    <BookmarkButton monacd={id} />
+                    <div className="flex items-center gap-2">
+                        <Link
+                            href={`/compare?a=${id}`}
+                            className="text-xs text-blue-200 border border-blue-400 px-3 py-1.5 rounded-lg"
+                        >
+                            ⚖ 비교하기
+                        </Link>
+                        <BookmarkButton monacd={id} />
+                    </div>
                 </div>
                 <div className="flex items-center gap-4">
                     {imageUrl && (
@@ -124,6 +192,9 @@ export default async function MemberPage({ params }: Props) {
                     <div>
                         <h1 className="text-2xl font-bold">{member.hg_nm}</h1>
                         <p className="text-blue-200 text-sm mt-1">{member.poly_nm} · {member.orig_nm}</p>
+                        {committees.length > 0 && (
+                            <p className="text-blue-300 text-xs mt-1 line-clamp-2">{committees[0]}</p>
+                        )}
                     </div>
                 </div>
             </div>
@@ -165,6 +236,54 @@ export default async function MemberPage({ params }: Props) {
                             ) : (
                                 <span className="text-sm text-gray-300">-</span>
                             )}
+                        </div>
+                    </div>
+                )}
+
+                {/* SNS 링크 */}
+                {snsLinks.length > 0 && (
+                    <div>
+                        <h2 className="text-sm font-semibold text-gray-500 mb-2 px-1">SNS</h2>
+                        <div className="flex gap-2 flex-wrap">
+                            {(snsLinks as { label: string; icon: string; url: string; color: string }[]).map((sns) => (
+                                <a
+                                    key={sns.label}
+                                    href={sns.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-2 bg-white border border-gray-100 rounded-xl px-4 py-2.5 hover:bg-gray-50"
+                                >
+                                    <span className={`text-lg font-bold ${sns.color}`}>{sns.icon}</span>
+                                    <span className="text-sm text-gray-700">{sns.label}</span>
+                                </a>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* 위원회 활동 */}
+                {committees.length > 0 && (
+                    <div>
+                        <h2 className="text-sm font-semibold text-gray-500 mb-2 px-1">위원회 활동</h2>
+                        <div className="bg-white rounded-xl border border-gray-100 p-4 flex flex-wrap gap-2">
+                            {committees.map((c) => (
+                                <span
+                                    key={c}
+                                    className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-full text-xs font-medium"
+                                >
+                                    {c}
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* 지역구 미니 지도 */}
+                {member.orig_nm && (
+                    <div>
+                        <h2 className="text-sm font-semibold text-gray-500 mb-2 px-1">지역구 위치</h2>
+                        <div className="bg-white rounded-xl border border-gray-100 p-3">
+                            <MiniMapWrapper origNm={member.orig_nm} />
                         </div>
                     </div>
                 )}
@@ -239,6 +358,47 @@ export default async function MemberPage({ params }: Props) {
                     </div>
                 </details>
 
+                {/* 같은 지역구 다른 의원 */}
+                {sameDistrict.length > 0 && (
+                    <div>
+                        <h2 className="text-sm font-semibold text-gray-500 mb-2 px-1">같은 지역구 의원</h2>
+                        <div className="flex gap-2 overflow-x-auto pb-1">
+                            {(sameDistrict as { mona_cd: string; hg_nm: string; poly_nm: string; orig_nm: string }[]).map((m) => (
+                                <Link
+                                    key={m.mona_cd}
+                                    href={`/member/${m.mona_cd}`}
+                                    className="flex-shrink-0 bg-white border border-gray-100 rounded-xl px-4 py-3 hover:bg-gray-50 min-w-[120px] text-center"
+                                >
+                                    <p className="text-sm font-semibold text-gray-800">{m.hg_nm}</p>
+                                    <span className={`text-xs px-2 py-0.5 rounded-full mt-1 inline-block ${partyBadge(m.poly_nm)}`}>
+                                        {m.poly_nm}
+                                    </span>
+                                    <p className="text-xs text-gray-400 mt-1">{m.orig_nm}</p>
+                                </Link>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* 같은 당 의원 추천 */}
+                {sameParty.length > 0 && (
+                    <div>
+                        <h2 className="text-sm font-semibold text-gray-500 mb-2 px-1">같은 당 의원</h2>
+                        <div className="flex gap-2 overflow-x-auto pb-1">
+                            {(sameParty as { mona_cd: string; hg_nm: string; poly_nm: string; orig_nm: string }[]).map((m) => (
+                                <Link
+                                    key={m.mona_cd}
+                                    href={`/member/${m.mona_cd}`}
+                                    className="flex-shrink-0 bg-white border border-gray-100 rounded-xl px-4 py-3 hover:bg-gray-50 min-w-[120px] text-center"
+                                >
+                                    <p className="text-sm font-semibold text-gray-800">{m.hg_nm}</p>
+                                    <p className="text-xs text-gray-400 mt-1">{m.orig_nm}</p>
+                                </Link>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
                 {/* 발의 법안 목록 */}
                 <details className="bg-white rounded-xl border border-gray-100">
                     <summary className="px-4 py-3 text-sm font-semibold text-gray-700 cursor-pointer list-none flex justify-between items-center">
@@ -302,6 +462,8 @@ export default async function MemberPage({ params }: Props) {
                         )}
                     </div>
                 </div>
+
+                <div className="pb-6" />
             </div>
         </main>
     )
