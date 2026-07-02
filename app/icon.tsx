@@ -19,14 +19,23 @@ export default function Icon() {
           paddingBottom: 3,
         }}
       >
-        <svg width="24" height="20" viewBox="0 0 24 20" xmlns="http://www.w3.org/2000/svg">
-          <path d="M2 11 Q12 1 22 11" fill="white" />
-          <rect x="2" y="11" width="3" height="6" fill="white" />
-          <rect x="7" y="11" width="3" height="6" fill="white" />
-          <rect x="12" y="11" width="3" height="6" fill="white" />
-          <rect x="17" y="11" width="3" height="6" fill="white" />
-          <rect x="1" y="17" width="22" height="2" rx="1" fill="white" />
+        <svg width="24" height="20" viewBox="0 0 24 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <g clip-path="url(#clip0_7_44)">
+            <path d="M10 14.9362V9.12766" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M11.12 1.82387C11.3944 1.71327 11.6957 1.65621 12.0007 1.65708C12.3058 1.65794 12.6065 1.71669 12.88 1.82885L20.746 5.02104C21.222 5.21438 21.056 5.80851 20.526 5.80851H3.47401C2.94401 5.80851 2.77901 5.21438 3.25401 5.02104L11.12 1.82387Z" fill="white" stroke="white" stroke-width="1.48549" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M14 14.9362V9.12766" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M18 14.9362V9.12766" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M3 18.2553H21" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M6 14.9362V9.12766" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          </g>
+          <defs>
+            <clipPath id="clip0_7_44">
+              <path d="M0 0H24V19.9149H0V0Z" fill="white" />
+            </clipPath>
+          </defs>
         </svg>
+
+
       </div>
     ),
     { ...size }
